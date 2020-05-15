@@ -25,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
     private final String APP_PREFERENCES = "largeTxt";
     private final String LARGE_TEXT = "largeText";
     private SwipeRefreshLayout swipeRefreshLayout;
+    List<Map<String, String>> values;
+    BaseAdapter listContentAdapter;
 
 
     @Override
@@ -41,20 +43,18 @@ public class MainActivity extends AppCompatActivity {
         swipeRefreshLayout = findViewById(R.id.srl_container);
         lvSimple = (ListView) findViewById(R.id.list);
 
-        final List<Map<String, String>> values = prepareContent();
+        values = prepareContent();
 
-        final BaseAdapter listContentAdapter = createAdapter(values);
+        listContentAdapter = createAdapter(values);
 
         lvSimple.setAdapter(listContentAdapter);
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                final List<Map<String, String>> values = prepareContent();
-                final BaseAdapter listContentAdapter = createAdapter(values);
 
-                lvSimple.setAdapter(listContentAdapter);
-
+                values.clear();
+                values.addAll(prepareContent());
                 listContentAdapter.notifyDataSetChanged();
                 swipeRefreshLayout.setRefreshing(false);
             }
@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         int[] to = {R.id.textView, R.id.textView2};
         SimpleAdapter sAdapter = new SimpleAdapter(this, values, R.layout.item,
                 from, to);
-        lvSimple = (ListView) findViewById(R.id.list);
+        lvSimple = findViewById(R.id.list);
         return sAdapter;
     }
 
