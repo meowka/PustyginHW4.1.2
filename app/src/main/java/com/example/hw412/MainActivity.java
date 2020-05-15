@@ -1,9 +1,5 @@
 package com.example.hw412;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
@@ -11,6 +7,9 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences sharedPreferences;
     private final String APP_PREFERENCES = "largeTxt";
     private final String LARGE_TEXT = "largeText";
-    SwipeRefreshLayout swipeRefreshLayout;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
 
     @Override
@@ -35,22 +34,52 @@ public class MainActivity extends AppCompatActivity {
         sharedPreferences = getSharedPreferences(APP_PREFERENCES, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         if (sharedPreferences.contains(LARGE_TEXT)){
-        String [] arrayContent = sharedPreferences.getString(LARGE_TEXT, "").split("\n\n");
-            final List<Map<String, String>>list = new ArrayList<>();
-            Map<String, String>mapList;
-            for (int i = 0; i <arrayContent.length ; i++) {
-                mapList = new HashMap<>();
-                mapList.put(TEXT_1,arrayContent[i]);
-                mapList.put(TEXT_2, String.valueOf(arrayContent[i].length()));
-                list.add(mapList);
-            }
-        }
-
+        prepareContent();
+        }else {
+            editor.putString(LARGE_TEXT,  getString(R.string.large_text));
+            editor.apply();}
         swipeRefreshLayout = findViewById(R.id.srl_container);
+        lvSimple = (ListView) findViewById(R.id.list);
 
-        editor.putString(LARGE_TEXT,  getString(R.string.large_text));
-        editor.apply();
-        String[] arrayContent = sharedPreferences.getString(LARGE_TEXT,"").split("\n\n");
+        final List<Map<String, String>> values = prepareContent();
+
+        final BaseAdapter listContentAdapter = createAdapter(values);
+
+        lvSimple.setAdapter(listContentAdapter);
+
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                final List<Map<String, String>> values = prepareContent();
+                final BaseAdapter listContentAdapter = createAdapter(values);
+
+                lvSimple.setAdapter(listContentAdapter);
+
+                listContentAdapter.notifyDataSetChanged();
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+
+        lvSimple.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                values.remove(i);
+                listContentAdapter.notifyDataSetChanged();
+            }
+        });
+    }
+
+    private BaseAdapter createAdapter(List<Map<String, String>> values) {
+        String [] from = {TEXT_1, TEXT_2};
+        int[] to = {R.id.textView, R.id.textView2};
+        SimpleAdapter sAdapter = new SimpleAdapter(this, values, R.layout.item,
+                from, to);
+        lvSimple = (ListView) findViewById(R.id.list);
+        return sAdapter;
+    }
+
+    private List<Map<String, String>> prepareContent() {
+        String [] arrayContent = sharedPreferences.getString(LARGE_TEXT, "").split("\n\n");
         final List<Map<String, String>>list = new ArrayList<>();
         Map<String, String>mapList;
         for (int i = 0; i <arrayContent.length ; i++) {
@@ -59,56 +88,6 @@ public class MainActivity extends AppCompatActivity {
             mapList.put(TEXT_2, String.valueOf(arrayContent[i].length()));
             list.add(mapList);
         }
-
-        String [] from = {TEXT_1, TEXT_2};
-        int[] to = {R.id.textView, R.id.textView2};
-        final SimpleAdapter sAdapter = new SimpleAdapter(this, list, R.layout.item,
-                from, to);
-        lvSimple = (ListView) findViewById(R.id.list);
-
-        lvSimple.setAdapter(sAdapter);
-
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-
-                swipeRefreshLayout.setRefreshing(false);
-            }
-        });
-
-        lvSimple.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                list.remove(i);
-                sAdapter.notifyDataSetChanged();
-            }
-        });
+        return list;
     }
-
-
-
-
-//    @NonNull
-//    private BaseAdapter createAdapter(List<Map<String, String>> values) {
-//        String [] from = {TEXT_1, TEXT_2};
-//        int[] to = {R.id.textView, R.id.textView2};
-//        SimpleAdapter sAdapter = new SimpleAdapter(this, values, R.layout.item,
-//                from, to);
-//        lvSimple = (ListView) findViewById(R.id.list);
-//        return sAdapter;
-//    }
-//
-//    @NonNull
-//    private List<Map<String, String>> prepareContent() {
-//        String[] arrayContent = getString(R.string.large_text).split("\n\n");
-//        List<Map<String, String>>list = new ArrayList<>();
-//        Map<String, String>mapList;
-//        for (int i = 0; i <arrayContent.length ; i++) {
-//            mapList = new HashMap<>();
-//            mapList.put(TEXT_1,arrayContent[i]);
-//            mapList.put(TEXT_2, String.valueOf(arrayContent[i].length()));
-//            list.add(mapList);
-//        }
-//        return list;
-//    }
 }
